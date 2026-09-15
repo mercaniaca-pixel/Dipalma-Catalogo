@@ -8,6 +8,9 @@ export const DEFAULT_SETTINGS = {
   footer_text: "",
   whatsapp_signature: "Catálogo Dipalma",
   pdf_footer_text: "Portafolio Comercial",
+  admin_password: "",
+  hero_title: "Portafolio Comercial",
+  hero_categories: null, // null = generado automáticamente desde los productos
 };
 
 let cache = null;

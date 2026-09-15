@@ -1,17 +1,45 @@
 import React, { useRef, useState } from "react";
 import { getLogoUrl, uploadLogo } from "../lib/api.js";
+import { downloadImportTemplate, parseProductsFile, importProducts } from "../lib/bulkImport.js";
 
 export function TopBar({
   query, setQuery, view, setView, total, onAddProduct, isAdmin, onLogout, sede,
   pdfBusy, onDownloadPdfCatalog, onDownloadPdfInternalUSD, onDownloadPdfInternalVES, onDownloadOrderSheet,
   pickMode, onTogglePickMode, selectedCount,
   bcvRate, bcvDate, bcvBusy, onRefreshBcv,
-  settings, onOpenSettings, sedes, onOpenSedes,
+  settings, onOpenSettings, sedes, onOpenSedes, onProductsImported,
 }) {
   const [logoUrl, setLogoUrl] = useState(getLogoUrl());
   const [busy, setBusy] = useState(false);
+  const [importBusy, setImportBusy] = useState(false);
   const inputRef = useRef(null);
+  const importInputRef = useRef(null);
   const sedeRif = (sedes || []).find((s) => s.key === sede)?.rif;
+
+  const handleImportFile = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    setImportBusy(true);
+    try {
+      const { rows, errors } = await parseProductsFile(file, sedes || []);
+      if (!rows.length) {
+        alert(errors.length ? `No se importó nada. ${errors.length} fila(s) con error (falta código o nombre).` : "El archivo no tiene filas para importar.");
+        return;
+      }
+      const warn = errors.length ? `\n\n${errors.length} fila(s) se omitirán por error (falta código o nombre).` : "";
+      if (!confirm(`Se van a crear o actualizar ${rows.length} producto(s) (se identifican por código).${warn}\n\n¿Continuar?`)) return;
+      const { okCount, failed } = await importProducts(rows);
+      onProductsImported && onProductsImported();
+      let msg = `Importación terminada: ${okCount} de ${rows.length} producto(s) guardados.`;
+      if (failed.length) msg += `\n\nFallaron ${failed.length}:\n` + failed.slice(0, 10).map((f) => `- ${f.codigo}: ${f.message}`).join("\n");
+      alert(msg);
+    } catch (err) {
+      alert("Error al leer el archivo: " + (err.message || err));
+    } finally {
+      setImportBusy(false);
+    }
+  };
 
   const handleLogoChange = async (e) => {
     const file = e.target.files && e.target.files[0];
@@ -144,6 +172,35 @@ export function TopBar({
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M12 5v14M5 12h14"/></svg>
               Añadir producto
             </button>
+          )}
+          {isAdmin && (
+            <>
+              <input
+                ref={importInputRef}
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                style={{ display: "none" }}
+                onChange={handleImportFile}
+                disabled={importBusy}
+              />
+              <button
+                className="btn btn-secondary btn-sm"
+                style={{ fontSize: 12, padding: "6px 10px" }}
+                onClick={() => importInputRef.current?.click()}
+                disabled={importBusy}
+                title="Crear o actualizar muchos productos a la vez desde un archivo Excel/CSV"
+              >
+                {importBusy ? "Importando…" : "📥 Importar productos"}
+              </button>
+              <button
+                className="btn btn-secondary btn-sm"
+                style={{ fontSize: 12, padding: "6px 10px" }}
+                onClick={() => downloadImportTemplate(sedes || [])}
+                title="Descargar plantilla Excel con las columnas correctas para importar"
+              >
+                Plantilla
+              </button>
+            </>
           )}
           {isAdmin && (
             <button className="btn btn-secondary btn-sm" onClick={onOpenSedes} title="Agregar, renombrar o eliminar sedes" style={{ fontSize: 12, padding: "6px 10px" }}>

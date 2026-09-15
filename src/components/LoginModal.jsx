@@ -1,9 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { listSedes } from "../lib/sedes.js";
 
-const ADMIN_PASS = import.meta.env.VITE_ADMIN_PASSWORD || "dipalma2026";
-
 export function LoginModal({ onLogin, settings }) {
+  const ADMIN_PASS = settings?.admin_password || import.meta.env.VITE_ADMIN_PASSWORD || "dipalma2026";
   const [sedes, setSedes] = useState(null); // null = cargando
   const [pendingAdmin, setPendingAdmin] = useState(null); // null | { sede, label }
   const [pass, setPass] = useState("");

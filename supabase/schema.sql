@@ -184,3 +184,28 @@ set precios = coalesce(precios, '{}'::jsonb)
 where precios is null and (precio is not null or precio_dipal is not null);
 
 comment on column public.products.precios is 'Precio de venta por sede: { "<sedeKey>": number }. Reemplaza a precio/precio_dipal.';
+
+-- ============================================================
+-- Configuración avanzada: contraseña de admin editable desde la app
+-- (reemplaza a la variable de entorno VITE_ADMIN_PASSWORD, que exigía
+-- redeploy) y tarjetas del Hero configurables por categoría.
+-- Ejecutar una sola vez.
+-- ============================================================
+alter table public.app_settings add column if not exists admin_password text;
+alter table public.app_settings add column if not exists hero_title text;
+alter table public.app_settings add column if not exists hero_categories jsonb;
+
+comment on column public.app_settings.admin_password is 'Clave de administrador compartida por todas las sedes. Si está vacía, la app usa VITE_ADMIN_PASSWORD o "dipalma2026".';
+comment on column public.app_settings.hero_categories is 'Tarjetas de categoría destacadas en el Hero: [{ "name": "...", "match": ["categoria1","categoria2"] }]. Si es null, se generan automáticamente desde los productos.';
+
+-- Conserva las 4 tarjetas de portada que Dipalma ya tenía (antes hardcodeadas
+-- en Hero.jsx), para que el cambio a "configurable" no altere lo que ve hoy.
+-- No pisa nada si ya se personalizó.
+update public.app_settings
+set hero_categories = '[
+  {"name":"Camarones & frutos del mar","match":["Camarones congelados","Otros productos del mar"]},
+  {"name":"Helados La Argentina","match":["Helados Argentina"]},
+  {"name":"Bases soft","match":["Bases / soft heladería"]},
+  {"name":"Complementos & sirops","match":["Complementos de heladería"]}
+]'::jsonb
+where id = 1 and hero_categories is null;

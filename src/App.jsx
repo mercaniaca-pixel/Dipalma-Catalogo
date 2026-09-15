@@ -228,6 +228,7 @@ export default function App() {
         onOpenSettings={() => setShowSettings(true)}
         sedes={sedes}
         onOpenSedes={() => setShowSedes(true)}
+        onProductsImported={reload}
         onAddProduct={() => setEditProd({ sedes: [sede] })}
         isAdmin={isAdmin}
         onLogout={handleLogout}
@@ -244,7 +245,7 @@ export default function App() {
         bcvBusy={bcvBusy}
         onRefreshBcv={() => refreshBcv(true)}
       />
-      <Hero products={sedeProducts} onPickCat={onPickCat} />
+      <Hero products={sedeProducts} settings={settings} onPickCat={onPickCat} />
       <FilterBar
         products={sedeProducts}
         marca={marca} setMarca={setMarca}
