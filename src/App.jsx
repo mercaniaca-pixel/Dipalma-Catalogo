@@ -7,12 +7,14 @@ import { DetailModal } from "./components/DetailModal.jsx";
 import { EditModal } from "./components/EditModal.jsx";
 import { LoginModal } from "./components/LoginModal.jsx";
 import { SettingsModal } from "./components/SettingsModal.jsx";
+import { SedesModal } from "./components/SedesModal.jsx";
 import { listProducts } from "./lib/api.js";
 import { normMarca, camaronTiers } from "./lib/format.js";
 import { generateCatalogPdf } from "./lib/pdfCatalog.js";
 import { getBcvRate } from "./lib/exchangeRate.js";
 import { downloadOrderSheet } from "./lib/exportOrderSheet.js";
 import { getSettings, DEFAULT_SETTINGS } from "./lib/settings.js";
+import { listSedes } from "./lib/sedes.js";
 
 export default function App() {
   const [role, setRole] = useState(() => localStorage.getItem("dipalma_role") || null);
@@ -21,8 +23,12 @@ export default function App() {
   const [error, setError] = useState(null);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [showSettings, setShowSettings] = useState(false);
+  const [sedes, setSedes] = useState([]);
+  const [showSedes, setShowSedes] = useState(false);
 
   useEffect(() => { getSettings().then(setSettings); }, []);
+  const reloadSedes = useCallback(() => { listSedes().then(setSedes); }, []);
+  useEffect(() => { reloadSedes(); }, [reloadSedes]);
 
   const handleLogin = (r) => {
     localStorage.setItem("dipalma_role", r);
@@ -35,7 +41,8 @@ export default function App() {
 
   const [kind, sedeVal] = (role || "").split(":");
   const isAdmin = kind === "admin";
-  const sede = sedeVal === "Dipal" ? "Dipal" : "Dipalma";
+  const sede = sedeVal || "Dipalma";
+  const sedeInfo = sedes.find((s) => s.key === sede) || null;
 
   const [query, setQuery] = useState("");
   const [marca, setMarca] = useState(null);
@@ -130,7 +137,7 @@ export default function App() {
     if (pdfBusy) return;
     setPdfBusy("catalog");
     try {
-      await generateCatalogPdf(sedeProducts, { withPrice: false, sede, footerText: settings.pdf_footer_text });
+      await generateCatalogPdf(sedeProducts, { withPrice: false, sede, sedeRif: sedeInfo?.rif, footerText: settings.pdf_footer_text });
     } catch (e) {
       alert("No se pudo generar el PDF: " + (e.message || e));
     } finally {
@@ -143,7 +150,7 @@ export default function App() {
     if (pdfBusy) return;
     setPdfBusy("USD");
     try {
-      await generateCatalogPdf(sedeProducts, { withPrice: true, currency: "USD", sede, footerText: settings.pdf_footer_text });
+      await generateCatalogPdf(sedeProducts, { withPrice: true, currency: "USD", sede, sedeRif: sedeInfo?.rif, footerText: settings.pdf_footer_text });
     } catch (e) {
       alert("No se pudo generar el PDF: " + (e.message || e));
     } finally {
@@ -156,7 +163,7 @@ export default function App() {
     setPdfBusy("VES");
     try {
       const { rate, date, isFresh } = await getBcvRate();
-      await generateCatalogPdf(sedeProducts, { withPrice: true, currency: "VES", rate, rateDate: date, sede, footerText: settings.pdf_footer_text });
+      await generateCatalogPdf(sedeProducts, { withPrice: true, currency: "VES", rate, rateDate: date, sede, sedeRif: sedeInfo?.rif, footerText: settings.pdf_footer_text });
       if (!isFresh) {
         const d = new Date(date).toLocaleDateString("es-VE", { day: "2-digit", month: "long", year: "numeric" });
         alert(
@@ -177,7 +184,7 @@ export default function App() {
       : sedeProducts;
     setPdfBusy("xlsx");
     try {
-      await downloadOrderSheet(list, sede, bcvRate, bcvDate, pickMode ? camaronChoice : {});
+      await downloadOrderSheet(list, sede, bcvRate, bcvDate, pickMode ? camaronChoice : {}, sedeInfo?.applies_iva);
     } catch (e) {
       alert("No se pudo generar la hoja de pedido: " + (e.message || e));
     } finally {
@@ -219,6 +226,8 @@ export default function App() {
         sede={sede}
         settings={settings}
         onOpenSettings={() => setShowSettings(true)}
+        sedes={sedes}
+        onOpenSedes={() => setShowSedes(true)}
         onAddProduct={() => setEditProd({ sedes: [sede] })}
         isAdmin={isAdmin}
         onLogout={handleLogout}
@@ -335,6 +344,14 @@ export default function App() {
           settings={settings}
           onClose={() => setShowSettings(false)}
           onSaved={(updated) => setSettings(updated)}
+        />
+      )}
+      {showSedes && (
+        <SedesModal
+          sedes={sedes}
+          currentSede={sede}
+          onClose={() => setShowSedes(false)}
+          onChanged={reloadSedes}
         />
       )}
     </div>

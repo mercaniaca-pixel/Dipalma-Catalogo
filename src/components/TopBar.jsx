@@ -1,17 +1,17 @@
 import React, { useRef, useState } from "react";
 import { getLogoUrl, uploadLogo } from "../lib/api.js";
-import { SEDE_RIF } from "../lib/sedeInfo.js";
 
 export function TopBar({
   query, setQuery, view, setView, total, onAddProduct, isAdmin, onLogout, sede,
   pdfBusy, onDownloadPdfCatalog, onDownloadPdfInternalUSD, onDownloadPdfInternalVES, onDownloadOrderSheet,
   pickMode, onTogglePickMode, selectedCount,
   bcvRate, bcvDate, bcvBusy, onRefreshBcv,
-  settings, onOpenSettings,
+  settings, onOpenSettings, sedes, onOpenSedes,
 }) {
   const [logoUrl, setLogoUrl] = useState(getLogoUrl());
   const [busy, setBusy] = useState(false);
   const inputRef = useRef(null);
+  const sedeRif = (sedes || []).find((s) => s.key === sede)?.rif;
 
   const handleLogoChange = async (e) => {
     const file = e.target.files && e.target.files[0];
@@ -58,8 +58,8 @@ export function TopBar({
               {settings?.tagline || "Portafolio Comercial"}
               {sede && <span className="sede-pill" style={{ marginLeft: 8, padding: "1px 8px", borderRadius: 999, fontSize: 11, fontWeight: 600, background: "rgba(255,255,255,0.12)" }}>{sede}</span>}
             </div>
-            {sede && SEDE_RIF[sede] && (
-              <div style={{ fontSize: 11, opacity: 0.6, marginTop: 1 }}>RIF {SEDE_RIF[sede]}</div>
+            {sede && sedeRif && (
+              <div style={{ fontSize: 11, opacity: 0.6, marginTop: 1 }}>RIF {sedeRif}</div>
             )}
             {isAdmin && (
               <button
@@ -143,6 +143,12 @@ export function TopBar({
             <button className="btn btn-add" onClick={onAddProduct} title="Añadir producto nuevo">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M12 5v14M5 12h14"/></svg>
               Añadir producto
+            </button>
+          )}
+          {isAdmin && (
+            <button className="btn btn-secondary btn-sm" onClick={onOpenSedes} title="Agregar, renombrar o eliminar sedes" style={{ fontSize: 12, padding: "6px 10px" }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 9h1M14 9h1M9 13h1M14 13h1M9 21v-4h6v4"/></svg>
+              Sedes
             </button>
           )}
           {isAdmin && (

@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
 import { MARCAS, CATEGORIAS } from "../data/seed.js";
 import { upsertProduct } from "../lib/api.js";
+import { listSedes } from "../lib/sedes.js";
 import { CAMARON_TIERS, CAMARON_UNITS } from "../lib/format.js";
 
 const SECTORES = ["Horeca", "Retail"];
-const SEDES = ["Dipalma", "Dipal"];
 const TIER_LABEL = { 1: "Precio 1", 2: "Precio 2", 3: "Precio 3" };
 
 const empty = {
   codigo: "", producto: "", marca: MARCAS[0], categoria: CATEGORIAS[0],
-  presentacion: "", uso: "", is_custom: true, sector: [], precio: "", precio_dipal: "",
+  presentacion: "", uso: "", is_custom: true, sector: [], precios: {},
   sedes: ["Dipalma"], precio_camaron: {},
 };
 
@@ -35,11 +35,14 @@ function sanitizeCamaronTiers(precioCamaron) {
 export function EditModal({ product, onClose, onSaved }) {
   const [form, setForm] = useState(empty);
   const [busy, setBusy] = useState(false);
+  const [sedes, setSedes] = useState([]);
   const isNew = !product?.id;
 
   useEffect(() => {
-    setForm(product ? { ...empty, ...product } : empty);
+    setForm(product ? { ...empty, ...product, precios: { ...(product.precios || {}) } } : empty);
   }, [product]);
+
+  useEffect(() => { listSedes().then(setSedes); }, []);
 
   useEffect(() => {
     const onKey = (e) => { if (e.key === "Escape") onClose(); };
@@ -74,10 +77,16 @@ export function EditModal({ product, onClose, onSaved }) {
     }
     setBusy(true);
     try {
+      const cleanPrecios = {};
+      for (const [k, v] of Object.entries(form.precios || {})) {
+        if (v !== "" && v != null) cleanPrecios[k] = Number(v);
+      }
       const payload = {
         ...form,
-        precio: form.precio === "" ? null : Number(form.precio),
-        precio_dipal: form.precio_dipal === "" || form.precio_dipal == null ? null : Number(form.precio_dipal),
+        precios: Object.keys(cleanPrecios).length ? cleanPrecios : null,
+        // Columnas viejas: se mantienen sincronizadas para no romper nada que aún las lea.
+        precio: cleanPrecios.Dipalma ?? null,
+        precio_dipal: cleanPrecios.Dipal ?? null,
         precio_camaron: sanitizeCamaronTiers(form.precio_camaron),
       };
       const saved = await upsertProduct(payload);
@@ -127,17 +136,17 @@ export function EditModal({ product, onClose, onSaved }) {
           <div className="field">
             <span>Sede(s) donde se vende</span>
             <div className="sector-checks">
-              {SEDES.map((s) => (
-                <label key={s} className="sector-check-label">
+              {sedes.map((sd) => (
+                <label key={sd.key} className="sector-check-label">
                   <input
                     type="checkbox"
-                    checked={(form.sedes || []).includes(s)}
+                    checked={(form.sedes || []).includes(sd.key)}
                     onChange={(e) => {
                       const curr = form.sedes || [];
-                      set("sedes", e.target.checked ? [...curr, s] : curr.filter((x) => x !== s));
+                      set("sedes", e.target.checked ? [...curr, sd.key] : curr.filter((x) => x !== sd.key));
                     }}
                   />
-                  {s}
+                  {sd.label}
                 </label>
               ))}
             </div>
@@ -178,20 +187,17 @@ export function EditModal({ product, onClose, onSaved }) {
               </div>
             ))
           ) : (
-            <>
-              {(form.sedes || []).includes("Dipalma") && (
-                <label className="field">
-                  <span>Precio de venta — Dipalma (US$)</span>
-                  <input type="number" step="0.01" min="0" value={form.precio ?? ""} onChange={(e) => set("precio", e.target.value)} placeholder="Ej. 33.35" />
-                </label>
-              )}
-              {(form.sedes || []).includes("Dipal") && (
-                <label className="field">
-                  <span>Precio de venta — Dipal (US$)</span>
-                  <input type="number" step="0.01" min="0" value={form.precio_dipal ?? ""} onChange={(e) => set("precio_dipal", e.target.value)} placeholder="Ej. 33.35" />
-                </label>
-              )}
-            </>
+            sedes.filter((sd) => (form.sedes || []).includes(sd.key)).map((sd) => (
+              <label className="field" key={sd.key}>
+                <span>Precio de venta — {sd.label} (US$)</span>
+                <input
+                  type="number" step="0.01" min="0"
+                  value={form.precios?.[sd.key] ?? ""}
+                  onChange={(e) => setForm((f) => ({ ...f, precios: { ...f.precios, [sd.key]: e.target.value } }))}
+                  placeholder="Ej. 33.35"
+                />
+              </label>
+            ))
           )}
           <label className="field">
             <span>Uso comercial sugerido</span>

@@ -1,20 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { listSedes } from "../lib/sedes.js";
 
 const ADMIN_PASS = import.meta.env.VITE_ADMIN_PASSWORD || "dipalma2026";
 
-// Un perfil = rol (sales/admin) + sede (Dipalma/Dipal). Ambas sedes comparten
-// la misma clave de administrador.
-const PROFILES = [
-  { role: "sales", sede: "Dipalma", label: "Ventas Dipalma" },
-  { role: "admin", sede: "Dipalma", label: "Admin Dipalma" },
-  { role: "sales", sede: "Dipal", label: "Ventas Dipal" },
-  { role: "admin", sede: "Dipal", label: "Admin Dipal" },
-];
-
 export function LoginModal({ onLogin, settings }) {
+  const [sedes, setSedes] = useState(null); // null = cargando
   const [pendingAdmin, setPendingAdmin] = useState(null); // null | { sede, label }
   const [pass, setPass] = useState("");
   const [error, setError] = useState("");
+
+  useEffect(() => { listSedes().then(setSedes).catch(() => setSedes([])); }, []);
+
+  // Un perfil = rol (sales/admin) + sede. Todas las sedes comparten la misma
+  // clave de administrador.
+  const PROFILES = useMemo(() => {
+    const list = sedes || [];
+    return list.flatMap((sd) => ([
+      { role: "sales", sede: sd.key, label: `Ventas ${sd.label}` },
+      { role: "admin", sede: sd.key, label: `Admin ${sd.label}` },
+    ]));
+  }, [sedes]);
 
   const pickProfile = (profile) => {
     if (profile.role === "admin") {
@@ -43,7 +48,9 @@ export function LoginModal({ onLogin, settings }) {
           </div>
         </div>
 
-        {!pendingAdmin ? (
+        {sedes === null ? (
+          <p className="login-prompt">Cargando…</p>
+        ) : !pendingAdmin ? (
           <>
             <p className="login-prompt">Selecciona tu perfil de acceso</p>
             <div className="login-roles">

@@ -87,10 +87,11 @@ export function DetailModal({ product, onClose, onEdit, onChanged, isAdmin, sede
       alert("Precio inválido.");
       return;
     }
-    const field = editingPriceSede === "Dipal" ? "precio_dipal" : "precio";
     setSavingPrice(true);
     try {
-      await upsertProduct({ ...p, [field]: value });
+      const nextPrecios = { ...(p.precios || {}), [editingPriceSede]: value };
+      if (value === null) delete nextPrecios[editingPriceSede];
+      await upsertProduct({ ...p, precios: nextPrecios });
       onChanged && onChanged();
       setEditingPriceSede(null);
     } catch (e) { alert("Error al guardar precio: " + e.message); }

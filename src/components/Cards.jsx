@@ -65,7 +65,6 @@ function PriceBlock({ p, sede, isAdmin, bcvRate, className }) {
     return <div className={className}><PriceOrTiers p={p} sede={sede} bcvRate={bcvRate} /></div>;
   }
   const rows = (p.sedes || [])
-    .filter((s) => s === "Dipalma" || s === "Dipal")
     .filter((s) => formatPrice(priceForSede(p, s)) !== null || cheapestKg(camaronTiers(p, s)) !== null)
     .map((s) => ({ sede: s }));
   if (!rows.length) return null;
@@ -221,9 +220,9 @@ export function ListView({
               <td className="mono">{p.presentacion}</td>
               <td className="mono">
                 {isAdmin ? (
-                  ["Dipalma", "Dipal"].filter((s) => p.sedes?.includes(s) && (formatPrice(priceForSede(p, s)) !== null || cheapestKg(camaronTiers(p, s)) !== null)).length ? (
-                    ["Dipalma", "Dipal"]
-                      .filter((s) => p.sedes?.includes(s) && (formatPrice(priceForSede(p, s)) !== null || cheapestKg(camaronTiers(p, s)) !== null))
+                  (p.sedes || []).filter((s) => formatPrice(priceForSede(p, s)) !== null || cheapestKg(camaronTiers(p, s)) !== null).length ? (
+                    (p.sedes || [])
+                      .filter((s) => formatPrice(priceForSede(p, s)) !== null || cheapestKg(camaronTiers(p, s)) !== null)
                       .map((s) => (
                         <div key={s} style={{ fontSize: "0.85em" }}>{s}: <PriceOrTiers p={p} sede={s} bcvRate={bcvRate} /></div>
                       ))

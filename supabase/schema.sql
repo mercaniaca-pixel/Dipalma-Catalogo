@@ -140,3 +140,47 @@ create policy "settings write anon"
   on public.app_settings for all
   using (true)
   with check (true);
+
+-- ============================================================
+-- Sedes configurables (reemplaza el "Dipalma"/"Dipal" fijo en código)
+-- Ejecutar una sola vez en el SQL Editor de Supabase.
+-- Un admin puede agregar, renombrar o eliminar sedes desde el panel
+-- "Sedes" de la app. Cada sede genera automáticamente dos perfiles de
+-- acceso (Ventas / Admin) en la pantalla de login.
+-- ============================================================
+create table if not exists public.sedes (
+  key         text primary key,
+  label       text not null,
+  rif         text,
+  applies_iva boolean not null default false,
+  sort_n      int,
+  created_at  timestamptz not null default now()
+);
+
+insert into public.sedes (key, label, rif, applies_iva, sort_n) values
+  ('Dipalma', 'Dipalma', 'J-500755406', false, 1),
+  ('Dipal',   'Dipal',   'J-505792440', true,  2)
+on conflict (key) do nothing;
+
+alter table public.sedes enable row level security;
+
+drop policy if exists "sedes read all" on public.sedes;
+create policy "sedes read all" on public.sedes for select using (true);
+
+drop policy if exists "sedes write anon" on public.sedes;
+create policy "sedes write anon" on public.sedes for all using (true) with check (true);
+
+-- ============================================================
+-- Precio genérico por sede (reemplaza precio/precio_dipal de a poco)
+-- Ejecutar una sola vez. No borra las columnas viejas — el código las
+-- sigue leyendo como respaldo mientras se termina de migrar.
+-- ============================================================
+alter table public.products add column if not exists precios jsonb;
+
+update public.products
+set precios = coalesce(precios, '{}'::jsonb)
+  || (case when precio is not null then jsonb_build_object('Dipalma', precio) else '{}'::jsonb end)
+  || (case when precio_dipal is not null then jsonb_build_object('Dipal', precio_dipal) else '{}'::jsonb end)
+where precios is null and (precio is not null or precio_dipal is not null);
+
+comment on column public.products.precios is 'Precio de venta por sede: { "<sedeKey>": number }. Reemplaza a precio/precio_dipal.';

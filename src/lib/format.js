@@ -32,9 +32,14 @@ export function formatPrice(precio) {
   return "US$ " + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-/** Precio del producto para una sede dada ("Dipalma" | "Dipal"). */
+/** Precio del producto para una sede dada (clave dinámica, ej. "Dipalma").
+ * Lee del campo genérico "precios"; si no está, cae en las columnas viejas
+ * precio/precio_dipal (datos de antes de que las sedes fueran configurables). */
 export function priceForSede(p, sede) {
-  return sede === "Dipal" ? p.precio_dipal : p.precio;
+  if (p.precios && Object.prototype.hasOwnProperty.call(p.precios, sede)) return p.precios[sede];
+  if (sede === "Dipal") return p.precio_dipal;
+  if (sede === "Dipalma") return p.precio;
+  return null;
 }
 
 /** Convierte un precio en US$ a bolívares formateados, dada la tasa BCV del día. */

@@ -61,6 +61,7 @@ export async function upsertProduct(p) {
     sector: p.sector ?? [],
     precio: p.precio ?? null,
     precio_dipal: p.precio_dipal ?? null,
+    precios: p.precios ?? null,
     precio_camaron: p.precio_camaron ?? null,
     sedes: p.sedes && p.sedes.length ? p.sedes : ["Dipalma"],
   };

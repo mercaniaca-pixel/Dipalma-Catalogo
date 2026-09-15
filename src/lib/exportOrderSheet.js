@@ -16,7 +16,7 @@ const UNIT_LABEL = Object.fromEntries(CAMARON_UNITS.map((u) => [u.key, u.label])
 
 const MONEY_FMT = '#,##0.00';
 
-// Dipal (Puerto La Cruz) factura con IVA; Dipalma (Puerto Libre de Margarita) está exenta.
+// Cada sede define en su configuración si aplica IVA (columna "applies_iva" en la tabla "sedes").
 const IVA_RATE = 0.16;
 const IVA_LABEL = "IVA (16%)";
 
@@ -61,14 +61,14 @@ function buildRows(products, sede, camaronChoices) {
  * (o por nivel/unidad de camarón) con su precio en US$ y Bs. (tasa BCV del día),
  * columna "Cantidad" en blanco, y "Subtotal US$"/"Subtotal Bs." calculados con
  * fórmula (Cantidad × Precio) que se actualizan solos al llenar cantidades —
- * con una fila TOTAL al final que suma todo. Dipal factura desde Puerto La Cruz
- * y suma 16% de IVA (columnas extra "IVA" y "Total c/IVA"); Dipalma opera como
- * Puerto Libre de Margarita y está exenta, así que esas columnas no aplican.
+ * con una fila TOTAL al final que suma todo. Si la sede aplica IVA (según su
+ * configuración), se agregan columnas extra "IVA" y "Total c/IVA"; si no,
+ * esas columnas no aplican.
  */
-export async function downloadOrderSheet(products, sede, bcvRate, bcvDate, camaronChoices = {}) {
+export async function downloadOrderSheet(products, sede, bcvRate, bcvDate, camaronChoices = {}, appliesIva = false) {
   const XLSX = await import("xlsx");
 
-  const applyIva = sede === "Dipal";
+  const applyIva = !!appliesIva;
   const HEADERS = applyIva ? [...BASE_HEADERS, ...IVA_HEADERS] : BASE_HEADERS;
   const COL = Object.fromEntries(HEADERS.map((h, i) => [h, i]));
 
@@ -95,8 +95,8 @@ export async function downloadOrderSheet(products, sede, bcvRate, bcvDate, camar
       (bcvDate ? ` · ${new Date(bcvDate).toLocaleDateString("es-VE", { day: "2-digit", month: "long", year: "numeric" })}` : "")
     : "Tasa BCV no disponible — columnas en Bs. quedaron en blanco"
   ) + (applyIva
-    ? " · Precios sin IVA — Dipal (Puerto La Cruz) aplica 16% de IVA, ver columnas al final"
-    : " · Dipalma opera como Puerto Libre de Margarita — exenta de IVA");
+    ? ` · Precios sin IVA — ${sede} aplica 16% de IVA, ver columnas al final`
+    : ` · ${sede} está exenta de IVA`);
 
   const HEADER_ROW = 2; // fila 0=info, 1=blank, 2=headers (0-indexed)
   const DATA_START = HEADER_ROW + 1;

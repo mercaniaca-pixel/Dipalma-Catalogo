@@ -1,5 +1,4 @@
 import { normMarca, prettyTitle, categoryTone, priceForSede, formatPrice, formatPriceVES, camaronTiers, cheapestKg } from "./format.js";
-import { SEDE_RIF } from "./sedeInfo.js";
 
 // ============================================================
 // Layout — ficha de producto horizontal (foto cuadrada + info),
@@ -95,7 +94,7 @@ function drawFooter(doc, pageNum, totalPages, footerText) {
  * @param {number} [opts.rate] - tasa BCV (Bs. por US$), requerida si withPrice && currency === "VES".
  * @param {string} [opts.rateDate] - fecha ISO de la tasa BCV.
  */
-export async function generateCatalogPdf(products, { withPrice = true, currency, sede = "Dipalma", rate, rateDate, footerText } = {}) {
+export async function generateCatalogPdf(products, { withPrice = true, currency, sede = "Dipalma", sedeRif, rate, rateDate, footerText } = {}) {
   const isVES = withPrice && currency === "VES";
   if (isVES && !rate) throw new Error("Falta la tasa BCV para generar el PDF en bolívares.");
 
@@ -110,7 +109,7 @@ export async function generateCatalogPdf(products, { withPrice = true, currency,
 
   const genDate = new Date().toLocaleDateString("es-VE", { day: "2-digit", month: "long", year: "numeric" });
   const subtitleLines = [];
-  if (SEDE_RIF[sede]) subtitleLines.push(`RIF ${SEDE_RIF[sede]}`);
+  if (sedeRif) subtitleLines.push(`RIF ${sedeRif}`);
   subtitleLines.push(
     withPrice
       ? `Uso interno · Precios en ${isVES ? "Bolívares" : "Dólares (US$)"} · Generado el ${genDate}`
