@@ -1085,6 +1085,9 @@ table.list tbody tr.row-unavail td.producto::after {
 
 /* Edit modal form */
 .modal-edit { max-width: 560px; }
+/* Modales de una sola columna (sin foto), ej. Configuración y Sedes —
+   evita el hueco en blanco que deja la cuadrícula de dos columnas de .modal. */
+.modal-single-col { grid-template-columns: 1fr; }
 .modal-edit-body { padding: 32px; }
 .modal-edit-body h2 { margin: 0 0 20px; }
 .field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; }

@@ -72,7 +72,7 @@ export function SedesModal({ sedes, currentSede, onClose, onChanged }) {
 
   return (
     <div className="modal-back" onClick={onClose}>
-      <div className="modal modal-edit" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 620 }}>
+      <div className="modal modal-edit modal-single-col" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 620 }}>
         <button className="modal-close" onClick={onClose}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M18 6 6 18"/></svg>
         </button>
