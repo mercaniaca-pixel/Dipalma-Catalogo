@@ -106,3 +106,37 @@ alter table public.products
   add column if not exists precio_camaron jsonb;
 
 comment on column public.products.precio_camaron is 'Precios por volumen (solo camarón): { "<Sede>": { "1|2|3": { bulto, estuche, kg } } }.';
+
+-- ============================================================
+-- Configuración de marca (nombre de empresa y textos de la app)
+-- Ejecutar una sola vez en el SQL Editor de Supabase.
+-- Fila única (id = 1) editable desde el panel "Configuración" en modo Admin.
+-- Permite reutilizar esta misma app para otra empresa sin tocar código.
+-- ============================================================
+create table if not exists public.app_settings (
+  id                 int primary key default 1,
+  company_name       text not null default 'Dipalma',
+  tagline            text not null default 'Portafolio Comercial',
+  login_subtitle     text not null default 'Portafolio Comercial',
+  search_placeholder text not null default 'Buscar por nombre, código o presentación…',
+  footer_text        text,
+  pdf_footer_text    text not null default 'Portafolio Comercial',
+  whatsapp_signature text not null default 'Catálogo Dipalma',
+  updated_at         timestamptz not null default now(),
+  constraint app_settings_singleton check (id = 1)
+);
+
+insert into public.app_settings (id) values (1) on conflict (id) do nothing;
+
+alter table public.app_settings enable row level security;
+
+drop policy if exists "settings read all" on public.app_settings;
+create policy "settings read all"
+  on public.app_settings for select
+  using (true);
+
+drop policy if exists "settings write anon" on public.app_settings;
+create policy "settings write anon"
+  on public.app_settings for all
+  using (true)
+  with check (true);

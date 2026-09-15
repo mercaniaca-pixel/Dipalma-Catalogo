@@ -6,17 +6,23 @@ import { GridCard, ListView } from "./components/Cards.jsx";
 import { DetailModal } from "./components/DetailModal.jsx";
 import { EditModal } from "./components/EditModal.jsx";
 import { LoginModal } from "./components/LoginModal.jsx";
+import { SettingsModal } from "./components/SettingsModal.jsx";
 import { listProducts } from "./lib/api.js";
 import { normMarca, camaronTiers } from "./lib/format.js";
 import { generateCatalogPdf } from "./lib/pdfCatalog.js";
 import { getBcvRate } from "./lib/exchangeRate.js";
 import { downloadOrderSheet } from "./lib/exportOrderSheet.js";
+import { getSettings, DEFAULT_SETTINGS } from "./lib/settings.js";
 
 export default function App() {
   const [role, setRole] = useState(() => localStorage.getItem("dipalma_role") || null);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+  const [showSettings, setShowSettings] = useState(false);
+
+  useEffect(() => { getSettings().then(setSettings); }, []);
 
   const handleLogin = (r) => {
     localStorage.setItem("dipalma_role", r);
@@ -124,7 +130,7 @@ export default function App() {
     if (pdfBusy) return;
     setPdfBusy("catalog");
     try {
-      await generateCatalogPdf(sedeProducts, { withPrice: false, sede });
+      await generateCatalogPdf(sedeProducts, { withPrice: false, sede, footerText: settings.pdf_footer_text });
     } catch (e) {
       alert("No se pudo generar el PDF: " + (e.message || e));
     } finally {
@@ -137,7 +143,7 @@ export default function App() {
     if (pdfBusy) return;
     setPdfBusy("USD");
     try {
-      await generateCatalogPdf(sedeProducts, { withPrice: true, currency: "USD", sede });
+      await generateCatalogPdf(sedeProducts, { withPrice: true, currency: "USD", sede, footerText: settings.pdf_footer_text });
     } catch (e) {
       alert("No se pudo generar el PDF: " + (e.message || e));
     } finally {
@@ -150,7 +156,7 @@ export default function App() {
     setPdfBusy("VES");
     try {
       const { rate, date, isFresh } = await getBcvRate();
-      await generateCatalogPdf(sedeProducts, { withPrice: true, currency: "VES", rate, rateDate: date, sede });
+      await generateCatalogPdf(sedeProducts, { withPrice: true, currency: "VES", rate, rateDate: date, sede, footerText: settings.pdf_footer_text });
       if (!isFresh) {
         const d = new Date(date).toLocaleDateString("es-VE", { day: "2-digit", month: "long", year: "numeric" });
         alert(
@@ -193,7 +199,7 @@ export default function App() {
     }, 80);
   };
 
-  if (!role) return <LoginModal onLogin={handleLogin} />;
+  if (!role) return <LoginModal onLogin={handleLogin} settings={settings} />;
 
   if (loading) return <div className="app-loading">Cargando catálogo…</div>;
   if (error) return (
@@ -211,6 +217,8 @@ export default function App() {
         view={view} setView={setView}
         total={sedeProducts.length}
         sede={sede}
+        settings={settings}
+        onOpenSettings={() => setShowSettings(true)}
         onAddProduct={() => setEditProd({ sedes: [sede] })}
         isAdmin={isAdmin}
         onLogout={handleLogout}
@@ -298,7 +306,9 @@ export default function App() {
       </main>
 
       <footer className="footer">
-        <span className="footer-brand">Dipalma</span> · Portafolio Comercial {sede} · {sedeProducts.length} productos
+        {settings.footer_text || (
+          <><span className="footer-brand">{settings.company_name}</span> · {settings.tagline} {sede} · {sedeProducts.length} productos</>
+        )}
       </footer>
 
       {openProd && (
@@ -310,6 +320,7 @@ export default function App() {
           isAdmin={isAdmin}
           sede={sede}
           bcvRate={bcvRate}
+          settings={settings}
         />
       )}
       {editProd !== null && (
@@ -317,6 +328,13 @@ export default function App() {
           product={editProd}
           onClose={() => setEditProd(null)}
           onSaved={() => reload()}
+        />
+      )}
+      {showSettings && (
+        <SettingsModal
+          settings={settings}
+          onClose={() => setShowSettings(false)}
+          onSaved={(updated) => setSettings(updated)}
         />
       )}
     </div>

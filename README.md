@@ -124,6 +124,17 @@ Cada push a `main` se redeploy a automáticamente.
 - ✅ Buscar por código, nombre, presentación
 - ✅ Compartir producto por WhatsApp
 - ✅ Vista grid o lista
+- ✅ Panel de **Configuración** (modo Admin) para editar nombre de la empresa y demás textos de marca sin tocar código — ver sección abajo
+
+## Configuración de marca (blanquear para otra empresa)
+
+Todos los textos de marca (nombre de la empresa, eslogan, subtítulo de login, placeholder del buscador, pie de página y firma de WhatsApp) viven en la tabla `app_settings` de Supabase, no en el código. Cualquier usuario con perfil **Admin** puede editarlos desde el botón **⚙️ Configuración** en el encabezado, y el cambio se ve al instante para todos los que usen la app.
+
+Esto es lo que permite reusar esta misma base de código para otra empresa: solo hace falta un proyecto Supabase propio (con su schema y sus productos) y entrar una vez a Configuración para poner el nombre real. Lo que **no** es configurable desde la UI todavía (requiere tocar código):
+
+- El sistema de dos sedes con reglas de IVA distintas (`Dipalma`/`Dipal`, en `src/lib/exportOrderSheet.js` y el modelo de precios `precio`/`precio_dipal`) — pensado específicamente para la operación de Dipalma en Venezuela.
+- Las categorías destacadas en el Hero (`src/components/Hero.jsx`), hoy fijas a camarones/helados.
+- La contraseña de administrador (`VITE_ADMIN_PASSWORD`, variable de entorno — requiere redeploy para cambiarla).
 
 ## Seguridad
 

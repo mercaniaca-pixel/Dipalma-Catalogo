@@ -42,7 +42,7 @@ function CamaronTable({ tiers, bcvRate }) {
   );
 }
 
-export function DetailModal({ product, onClose, onEdit, onChanged, isAdmin, sede, bcvRate }) {
+export function DetailModal({ product, onClose, onEdit, onChanged, isAdmin, sede, bcvRate, settings }) {
   const [copied, setCopied] = useState(false);
   const [unavail, setUnavail] = useState(!!product?.unavailable);
   const [editingPriceSede, setEditingPriceSede] = useState(null); // null | "Dipalma" | "Dipal"
@@ -150,7 +150,7 @@ export function DetailModal({ product, onClose, onEdit, onChanged, isAdmin, sede
       `Categoría: ${p.categoria}\n` +
       `Presentación: ${p.presentacion}\n` +
       (formatPrice(priceForSede(p, sede)) ? `Precio: ${formatPrice(priceForSede(p, sede))}\n` : "") +
-      `Uso sugerido: ${p.uso}\n\n— Catálogo Dipalma`;
+      `Uso sugerido: ${p.uso}\n\n— ${settings?.whatsapp_signature || "Catálogo Dipalma"}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`, "_blank", "noopener,noreferrer");
   };
   const copyCode = async () => {

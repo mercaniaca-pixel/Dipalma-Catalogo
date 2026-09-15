@@ -76,11 +76,11 @@ function drawHeader(doc, { title, subtitleLines, isFirst }) {
   return h;
 }
 
-function drawFooter(doc, pageNum, totalPages) {
+function drawFooter(doc, pageNum, totalPages, footerText) {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   doc.setTextColor(...INK_SOFT);
-  doc.text("Dipalma · Portafolio Comercial", MARGIN, PAGE_H - 6);
+  doc.text(footerText || "Portafolio Comercial", MARGIN, PAGE_H - 6);
   doc.text(`Página ${pageNum} de ${totalPages}`, PAGE_W - MARGIN, PAGE_H - 6, { align: "right" });
   doc.setTextColor(...INK);
 }
@@ -95,7 +95,7 @@ function drawFooter(doc, pageNum, totalPages) {
  * @param {number} [opts.rate] - tasa BCV (Bs. por US$), requerida si withPrice && currency === "VES".
  * @param {string} [opts.rateDate] - fecha ISO de la tasa BCV.
  */
-export async function generateCatalogPdf(products, { withPrice = true, currency, sede = "Dipalma", rate, rateDate } = {}) {
+export async function generateCatalogPdf(products, { withPrice = true, currency, sede = "Dipalma", rate, rateDate, footerText } = {}) {
   const isVES = withPrice && currency === "VES";
   if (isVES && !rate) throw new Error("Falta la tasa BCV para generar el PDF en bolívares.");
 
@@ -160,7 +160,7 @@ export async function generateCatalogPdf(products, { withPrice = true, currency,
       drawProductCell(doc, x, y, cellW, cellH, item.p, item.img, { withPrice, isVES, rate, sede });
     });
 
-    drawFooter(doc, pageIndex + 1, pages.length);
+    drawFooter(doc, pageIndex + 1, pages.length, footerText);
   });
 
   const fileDate = new Date().toISOString().slice(0, 10);

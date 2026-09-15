@@ -7,6 +7,7 @@ export function TopBar({
   pdfBusy, onDownloadPdfCatalog, onDownloadPdfInternalUSD, onDownloadPdfInternalVES, onDownloadOrderSheet,
   pickMode, onTogglePickMode, selectedCount,
   bcvRate, bcvDate, bcvBusy, onRefreshBcv,
+  settings, onOpenSettings,
 }) {
   const [logoUrl, setLogoUrl] = useState(getLogoUrl());
   const [busy, setBusy] = useState(false);
@@ -40,7 +41,7 @@ export function TopBar({
                 title="Cambiar logo"
               />
             ) : (
-              "D"
+              (settings?.company_name || "D")[0]
             )}
             <input
               ref={inputRef}
@@ -52,9 +53,9 @@ export function TopBar({
             />
           </div>
           <div>
-            <div className="brand-name">Dipalma</div>
+            <div className="brand-name">{settings?.company_name || "Dipalma"}</div>
             <div className="brand-sub">
-              Portafolio Comercial
+              {settings?.tagline || "Portafolio Comercial"}
               {sede && <span className="sede-pill" style={{ marginLeft: 8, padding: "1px 8px", borderRadius: 999, fontSize: 11, fontWeight: 600, background: "rgba(255,255,255,0.12)" }}>{sede}</span>}
             </div>
             {sede && SEDE_RIF[sede] && (
@@ -79,7 +80,7 @@ export function TopBar({
           </span>
           <input
             type="text"
-            placeholder="Buscar por nombre, código o presentación…"
+            placeholder={settings?.search_placeholder || "Buscar por nombre, código o presentación…"}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
@@ -142,6 +143,12 @@ export function TopBar({
             <button className="btn btn-add" onClick={onAddProduct} title="Añadir producto nuevo">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M12 5v14M5 12h14"/></svg>
               Añadir producto
+            </button>
+          )}
+          {isAdmin && (
+            <button className="btn btn-secondary btn-sm" onClick={onOpenSettings} title="Editar nombre de la empresa y otros textos de la app" style={{ fontSize: 12, padding: "6px 10px" }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              Configuración
             </button>
           )}
           <span className="count-pill">{total} productos</span>

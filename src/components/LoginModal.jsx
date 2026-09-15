@@ -11,7 +11,7 @@ const PROFILES = [
   { role: "admin", sede: "Dipal", label: "Admin Dipal" },
 ];
 
-export function LoginModal({ onLogin }) {
+export function LoginModal({ onLogin, settings }) {
   const [pendingAdmin, setPendingAdmin] = useState(null); // null | { sede, label }
   const [pass, setPass] = useState("");
   const [error, setError] = useState("");
@@ -36,10 +36,10 @@ export function LoginModal({ onLogin }) {
     <div className="login-back">
       <div className="login-box">
         <div className="login-logo-wrap">
-          <div className="login-logo-mark">dp</div>
+          <div className="login-logo-mark">{(settings?.company_name || "Dipalma").slice(0, 2).toLowerCase()}</div>
           <div>
-            <div className="login-brand">Dipalma</div>
-            <div className="login-sub">Portafolio Comercial</div>
+            <div className="login-brand">{settings?.company_name || "Dipalma"}</div>
+            <div className="login-sub">{settings?.login_subtitle || "Portafolio Comercial"}</div>
           </div>
         </div>
 
