@@ -8,6 +8,7 @@ import { EditModal } from "./components/EditModal.jsx";
 import { LoginModal } from "./components/LoginModal.jsx";
 import { SettingsModal } from "./components/SettingsModal.jsx";
 import { SedesModal } from "./components/SedesModal.jsx";
+import { InvoiceModal } from "./components/InvoiceModal.jsx";
 import { listProducts } from "./lib/api.js";
 import { normMarca, camaronTiers } from "./lib/format.js";
 import { generateCatalogPdf } from "./lib/pdfCatalog.js";
@@ -25,6 +26,7 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [sedes, setSedes] = useState([]);
   const [showSedes, setShowSedes] = useState(false);
+  const [showInvoice, setShowInvoice] = useState(false);
 
   useEffect(() => { getSettings().then(setSettings); }, []);
   const reloadSedes = useCallback(() => { listSedes().then(setSedes); }, []);
@@ -192,6 +194,14 @@ export default function App() {
     }
   };
 
+  const openInvoice = () => {
+    if (!(pickMode && selected.size > 0)) {
+      alert('Primero activa "Elegir productos" y marca los productos a facturar.');
+      return;
+    }
+    setShowInvoice(true);
+  };
+
   const togglePickMode = () => {
     setPickMode((v) => !v);
     setSelected(new Set());
@@ -237,6 +247,7 @@ export default function App() {
         onDownloadPdfInternalUSD={handleDownloadPdfInternalUSD}
         onDownloadPdfInternalVES={handleDownloadPdfInternalVES}
         onDownloadOrderSheet={handleDownloadOrderSheet}
+        onOpenInvoice={openInvoice}
         pickMode={pickMode}
         onTogglePickMode={togglePickMode}
         selectedCount={selected.size}
@@ -353,6 +364,14 @@ export default function App() {
           currentSede={sede}
           onClose={() => setShowSedes(false)}
           onChanged={reloadSedes}
+        />
+      )}
+      {showInvoice && (
+        <InvoiceModal
+          products={pickMode && selected.size > 0 ? sedeProducts.filter((p) => selected.has(p.codigo)) : []}
+          sede={sede}
+          bcvRate={bcvRate}
+          onClose={() => setShowInvoice(false)}
         />
       )}
     </div>

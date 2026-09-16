@@ -7,7 +7,7 @@ export function TopBar({
   pdfBusy, onDownloadPdfCatalog, onDownloadPdfInternalUSD, onDownloadPdfInternalVES, onDownloadOrderSheet,
   pickMode, onTogglePickMode, selectedCount,
   bcvRate, bcvDate, bcvBusy, onRefreshBcv,
-  settings, onOpenSettings, sedes, onOpenSedes, onProductsImported,
+  settings, onOpenSettings, sedes, onOpenSedes, onProductsImported, onOpenInvoice,
 }) {
   const [logoUrl, setLogoUrl] = useState(getLogoUrl());
   const [busy, setBusy] = useState(false);
@@ -167,6 +167,16 @@ export function TopBar({
           >
             {pdfBusy === "xlsx" ? "Generando…" : pickMode && selectedCount > 0 ? `Hoja de pedido (${selectedCount})` : "Hoja de pedido"}
           </button>
+          {isAdmin && (
+            <button
+              className="btn btn-secondary btn-sm"
+              style={{ fontSize: 12, padding: "6px 10px" }}
+              onClick={onOpenInvoice}
+              title="Generar el texto de una factura para imprimir sobre la hoja Forma Libre membretada"
+            >
+              🧾 Facturar{pickMode && selectedCount > 0 ? ` (${selectedCount})` : ""}
+            </button>
+          )}
           {isAdmin && (
             <button className="btn btn-add" onClick={onAddProduct} title="Añadir producto nuevo">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M12 5v14M5 12h14"/></svg>
