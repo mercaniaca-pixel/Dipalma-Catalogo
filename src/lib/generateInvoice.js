@@ -25,6 +25,7 @@ const G = {
   // Bloque factura (derecha)
   rightLabelX: 143,
   rightValueX: 163,
+  facturaLabelX: 155,
   facturaValueX: 183,
   facturaY: 69,
   clienteNoY: 74,
@@ -92,24 +93,44 @@ export async function generateInvoicePdf(data) {
   doc.setTextColor(0, 0, 0);
 
   // --- Bloque cliente ---
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
-  doc.text(cliente.razonSocial || "", G.leftValueX, G.razonY);
-  doc.text(cliente.rif || "", G.leftValueX, G.rifY);
-  doc.text(cliente.direccion1 || "", G.leftValueX, G.dir1Y);
-  doc.text(cliente.direccion2 || "", G.leftValueX, G.dir2Y);
-  doc.text(cliente.contacto || "", G.leftValueX, G.contactoY);
-  doc.text(cliente.telefonos || "", G.leftValueX, G.telefonosY);
+  const label = (text, x, y, size = 9.5) => {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(size);
+    doc.text(text, x, y);
+  };
+  const value = (text, x, y, size = 10) => {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(size);
+    doc.text(text || "", x, y);
+  };
+
+  label("Razón Social:", G.leftLabelX, G.razonY);
+  value(cliente.razonSocial, G.leftValueX, G.razonY);
+  label("RIF:", G.leftLabelX, G.rifY);
+  value(cliente.rif, G.leftValueX, G.rifY);
+  label("Dirección:", G.leftLabelX, G.dir1Y);
+  value(cliente.direccion1, G.leftValueX, G.dir1Y);
+  value(cliente.direccion2, G.leftValueX, G.dir2Y);
+  label("Contacto:", G.leftLabelX, G.contactoY);
+  value(cliente.contacto, G.leftValueX, G.contactoY);
+  label("Teléfonos :", G.leftLabelX, G.telefonosY);
+  value(cliente.telefonos, G.leftValueX, G.telefonosY);
 
   // --- Bloque factura ---
+  label("Factura N°", G.facturaLabelX, G.facturaY, 10.5);
   doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
   doc.text(factura.numero || "", G.facturaValueX, G.facturaY);
-  doc.setFont("helvetica", "normal");
-  doc.text(factura.clienteNo || "", G.rightValueX, G.clienteNoY);
-  doc.text(factura.fecha || "", G.rightValueX, G.fechaY);
-  doc.text(factura.vencimiento || "", G.rightValueX, G.vencimientoY);
-  doc.text(factura.credito || "", G.rightValueX, G.creditoY);
-  doc.text(factura.asesor || "", G.rightValueX, G.asesorY);
+  label("Cliente No.:", G.rightLabelX, G.clienteNoY);
+  value(factura.clienteNo, G.rightValueX, G.clienteNoY);
+  label("Fecha:", G.rightLabelX, G.fechaY);
+  value(factura.fecha, G.rightValueX, G.fechaY);
+  label("Vencimiento:", G.rightLabelX, G.vencimientoY);
+  value(factura.vencimiento, G.rightValueX, G.vencimientoY);
+  label("Credito:", G.rightLabelX, G.creditoY);
+  value(factura.credito, G.rightValueX, G.creditoY);
+  label("Asesor:", G.rightLabelX, G.asesorY);
+  value(factura.asesor, G.rightValueX, G.asesorY);
 
   // --- Tabla ---
   const rowsBottom = G.firstRowY - G.rowH + items.length * G.rowH;
