@@ -82,13 +82,31 @@ function bs(n) {
  * @param {number} data.bcvRate - tasa BCV del día (Bs. por US$)
  * @returns {{ ok: boolean, reason?: string }}
  */
+function withTimeout(promise, ms, message) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(message)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 export async function generateInvoicePdf(data) {
   const { cliente, factura, items, descuento = 0, bcvRate } = data;
   if (items.length > G.maxRows) {
     return { ok: false, reason: `Esta forma solo tiene espacio para ${G.maxRows} líneas de producto. Reduce la cantidad de productos o genera varias facturas.` };
   }
 
-  const { jsPDF } = await import("jspdf");
+  let jsPDF;
+  try {
+    ({ jsPDF } = await withTimeout(
+      import("jspdf"),
+      15000,
+      "No se pudo cargar el generador de PDF (tardó demasiado). Recarga la página (Cmd/Ctrl+Shift+R) e inténtalo de nuevo."
+    ));
+  } catch (e) {
+    console.error("generateInvoicePdf: fallo al cargar jspdf", e);
+    return { ok: false, reason: e.message || "No se pudo cargar el generador de PDF. Recarga la página e inténtalo de nuevo." };
+  }
   const doc = new jsPDF({ unit: "mm", format: "a4", compress: true });
   doc.setTextColor(0, 0, 0);
 
